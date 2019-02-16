@@ -1,0 +1,9 @@
+*.map
+*.lss
+*.elf
+*.o
+*.d
+vendor/
+.cproject
+.project
+.settings
