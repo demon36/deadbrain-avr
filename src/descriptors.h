@@ -8,6 +8,7 @@
 #ifndef DESCRIPTORS_H_
 #define DESCRIPTORS_H_
 
+#define INTERRUPT_POLL_INERVAL 1
 // This descriptor is based on http://www.usb.org/developers/devclass_docs/midi10.pdf
 //
 // Appendix B. Example: Simple MIDI Adapter (Informative)
@@ -170,7 +171,7 @@ static const PROGMEM char configDescrMIDI[] = {	/* USB configuration descriptor 
 	0x81,			/* bEndpointAddress IN endpoint number 1 */
 	3,			/* bmAttributes: 2: Bulk, 3: Interrupt endpoint */
 	8, 0,			/* wMaxPacketSize */
-	5,			/* bIntervall in ms */
+	INTERRUPT_POLL_INERVAL,			/* bIntervall in ms */
 	0,			/* bRefresh */
 	0,			/* bSyncAddress */
 

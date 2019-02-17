@@ -3,6 +3,8 @@
 *.elf
 *.o
 *.d
+*.eep
+*.hex
 vendor/
 .cproject
 .project

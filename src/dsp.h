@@ -9,8 +9,8 @@
 #define DSP_H_
 
 #include <avr/eeprom.h>
+#include <usbdrv/usbdrv.h>
 #include "adc.h"
-#include "usbdrv/usbdrv.h"
 #include "uart.h"
 
 #define true 1
@@ -44,7 +44,6 @@ unsigned int retrigger_ctd[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 uint8_t hihat_pedal_threshold = 0xB0;
 uint8_t hihat_pedal_state = PEDAL_OPEN;
 uint8_t midiMsg[8];
-uint8_t test = 120;
 
 // delayed message
 uint8_t delayed_msg_flag = false;
@@ -62,14 +61,14 @@ void show_eeprom(){
 	eeprom_read_block(temp, (uint8_t*)0, NO_CHANNELS * NO_SETTINGS + 1);
 	uint8_t i2;
 	for(i2 = 0; i2 < 81; i2++)
-		send_byte(temp[i2]);
+		uart_send_byte(temp[i2]);
 }
 
 void show_settings(){
 	uint8_t i,j;
 	for(i = 0; i < NO_CHANNELS; i++){
 		for(j = 0; j < NO_SETTINGS; j++){
-			send_byte(settings[i][j]);
+			uart_send_byte(settings[i][j]);
 		}
 	}
 }
@@ -146,9 +145,9 @@ void process_sample2(){
 void send_pedal_status(){
 	uint8_t msize = 4;
 	if (usbInterruptIsReady()){
-	midiMsg[0] = 0x09;
-	midiMsg[1] = 0xB0; //CC message
-	midiMsg[2] = 0x04; //controller number
+		midiMsg[0] = 0x09;
+		midiMsg[1] = 0xB0; //CC message
+		midiMsg[2] = 0x04; //controller number
 	if (hihat_pedal_state == PEDAL_CLOSED){
 		midiMsg[3] = 0x00; //pedal closed cc msg
 		midiMsg[4] = 0x09;

@@ -4,13 +4,28 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../src/main.c 
+../src/adc.c \
+../src/main.c \
+../src/midi.c \
+../src/timer.c \
+../src/uart.c \
+../src/usb.c 
 
 OBJS += \
-./src/main.o 
+./src/adc.o \
+./src/main.o \
+./src/midi.o \
+./src/timer.o \
+./src/uart.o \
+./src/usb.o 
 
 C_DEPS += \
-./src/main.d 
+./src/adc.d \
+./src/main.d \
+./src/midi.d \
+./src/timer.d \
+./src/uart.d \
+./src/usb.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

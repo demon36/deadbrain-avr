@@ -22,6 +22,8 @@
 #include "adc.h"
 #include "descriptors.h"
 #include "dsp.h"
+#include "midi.h"
+#include "usb.h"
 
 /*---------------------------------------------------------------------------*/
 /* usbFunctionRead                                                           */
@@ -32,15 +34,16 @@ uchar usbFunctionRead(uchar * data, uchar len)
 	// DEBUG LED
 	//PORTB = 0x20;
 
-	data[0] = 0;
-	data[1] = 0;
+	data[0] = 0x04;
+	data[1] = 0xF0;
 	data[2] = 0;
 	data[3] = 0;
-	data[4] = 0;
+	data[4] = 0x07;
 	data[5] = 0;
 	data[6] = 0;
+	data[7] = 0xf7;
 
-	return 0;
+	return 8;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -120,10 +123,10 @@ static void hardwareInit(void)
 	DDRB = 0b00011111;
 }
 
-unsigned char counter_bit = 1;
-ISR(TIMER1_OVF_vect)
-{
-	tot_overflow++;
+volatile uint8_t should_poll = 1;
+
+void timer_cb(){
+	should_poll = 1;
 }
 
 int main(void)
@@ -139,18 +142,29 @@ int main(void)
 
 	usbInit();
 	sendEmptyFrame = 0;
-	init_uart();
-//	init_timer1();
+	uart_init();
+	timer_init();
+	timer_register_cb(timer_cb);
 	init_adc();
 	load_settings();
-	send_string("start");
+	uart_send_str("start");
 	sei();
 	//load_settings();
 	//_delay_ms(5);
 	//show_settings();
 	while (1) {		/* main event loop */
 		wdt_reset();
-		usbPoll();
+
+		if(should_poll){
+			usbPoll();
+//			midi_qpush_note_msg(4, 40);
+//			midi_release_qpacket();
+//			usb_send_dummy();
+			should_poll = 0;
+		}
+
+
+		debug_ch = 0xFF;
 		//send_byte(0xff);
 //		if(counter_bit == 0)
 //			TCCR1B = 0x05 ;
@@ -159,10 +173,13 @@ int main(void)
 		while(current_channel < 8){
 			get_sample();
 
-			if(debug_ch == current_channel) //watch signal ?
-				send_byte(current_sample);
-			if(debug_ch == 0x10)
+			if(debug_ch == current_channel){ //watch signal ?
+				uart_send_byte(current_sample);
+			}
+
+			if(debug_ch == 0x10){
 				process_sample2();
+			}
 			current_channel++;
 		}
 
@@ -175,8 +192,9 @@ int main(void)
 
 		//hihat pedal
 		get_pedal_value();
-		if(debug_ch == current_channel)
-			send_byte(current_sample);
+		if(debug_ch == current_channel){
+			uart_send_byte(current_sample);
+		}
 		process_hp_sample();
 		current_channel++;
 
