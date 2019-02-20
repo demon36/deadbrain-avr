@@ -17,10 +17,10 @@
 
 #include <usbdrv/usbdrv.h>
 #include <usbdrv/oddebug.h>
+#include "descriptors.h"
 #include "uart.h"
 #include "timer.h"
 #include "adc.h"
-#include "descriptors.h"
 #include "dsp.h"
 #include "midi.h"
 #include "usb.h"
@@ -33,17 +33,7 @@ uchar usbFunctionRead(uchar * data, uchar len)
 {
 	// DEBUG LED
 	//PORTB = 0x20;
-
-	data[0] = 0x04;
-	data[1] = 0xF0;
-	data[2] = 0;
-	data[3] = 0;
-	data[4] = 0x07;
-	data[5] = 0;
-	data[6] = 0;
-	data[7] = 0xf7;
-
-	return 8;
+	return 0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -53,40 +43,7 @@ uchar usbFunctionRead(uchar * data, uchar len)
 uchar usbFunctionWrite(uchar * data, uchar len)
 {
 	// DEBUG LED
-
 	return 1;
-}
-
-
-/*---------------------------------------------------------------------------*/
-/* usbFunctionWriteOut                                                       */
-/*                                                                           */
-/* this Function is called if a MIDI Out message (from PC) arrives.          */
-/*                                                                           */
-/*---------------------------------------------------------------------------*/
-
-void usbFunctionWriteOut(uchar * data, uchar len)
-{
-	//PORTB ^= 0x20;
-	//send_byte(0xff);
-	//uint8_t i;
-	//send_byte(len);
-	//for(i = 0; i < len ; i++)
-	//	send_byte(data[i]);
-
-	if(len == 4){
-		save_settings();
-	}else if(data[2] == 0x32){
-		debug_ch = data[3];
-		//PORTB = data[3];
-	}else{
-		settings[ data[2] ][ data[3] ] = data[5];
-		show_settings();
-	}
-
-	//send_byte(0xff);
-	//_delay_ms(10);
-	//PORTB &= ~0x20;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -163,7 +120,6 @@ int main(void)
 			should_poll = 0;
 		}
 
-
 		debug_ch = 0xFF;
 		//send_byte(0xff);
 //		if(counter_bit == 0)
@@ -175,10 +131,11 @@ int main(void)
 
 			if(debug_ch == current_channel){ //watch signal ?
 				uart_send_byte(current_sample);
+//				midi_qpush_sysex_single_packet(current_sample, 0, 0, 0);
 			}
 
 			if(debug_ch == 0x10){
-				process_sample2();
+				dsp_process_sample_2();
 			}
 			current_channel++;
 		}
@@ -195,7 +152,7 @@ int main(void)
 		if(debug_ch == current_channel){
 			uart_send_byte(current_sample);
 		}
-		process_hp_sample();
+		dsp_process_hihat_pedal_sample();
 		current_channel++;
 
 
@@ -209,6 +166,7 @@ int main(void)
 //		}
 
 		//PORTB &= ~0x20;
+		midi_qpop_packet();
 	}
 	return 0;
 }

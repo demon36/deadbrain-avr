@@ -5,6 +5,8 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../src/adc.c \
+../src/ctrl.c \
+../src/dsp.c \
 ../src/main.c \
 ../src/midi.c \
 ../src/timer.c \
@@ -13,6 +15,8 @@ C_SRCS += \
 
 OBJS += \
 ./src/adc.o \
+./src/ctrl.o \
+./src/dsp.o \
 ./src/main.o \
 ./src/midi.o \
 ./src/timer.o \
@@ -21,6 +25,8 @@ OBJS += \
 
 C_DEPS += \
 ./src/adc.d \
+./src/ctrl.d \
+./src/dsp.d \
 ./src/main.d \
 ./src/midi.d \
 ./src/timer.d \
@@ -32,7 +38,7 @@ C_DEPS += \
 src/%.o: ../src/%.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: AVR Compiler'
-	avr-gcc -I"/home/demon/cpp_projects/deadbrain-avr/vendor" -I/usr/lib/avr/include -Wall -Os -fpack-struct -fshort-enums -ffunction-sections -fdata-sections -std=gnu99 -funsigned-char -funsigned-bitfields -mmcu=atmega328p -DF_CPU=20000000UL -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -c -o "$@" "$<"
+	avr-gcc -I"/home/demon/cpp_projects/deadbrain-avr/vendor" -I/usr/lib/avr/include -I"/home/demon/cpp_projects/deadbrain-avr/include" -Wall -Os -fpack-struct -fshort-enums -ffunction-sections -fdata-sections -std=gnu99 -funsigned-char -funsigned-bitfields -mmcu=atmega328p -DF_CPU=20000000UL -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -c -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
