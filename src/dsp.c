@@ -10,11 +10,11 @@
 //extern uchar sendEmptyFrame;
 
 uint8_t debug_ch = 0x10;
-deadbrain_config settings;
+DeadBrainConfig settings = {{0}};
 
-uint8_t last_sample[16] = {0};
-uint8_t hit_started[16] = {0};
-unsigned int retrigger_ctd[16] = {0};
+uint8_t last_sample[NUM_CHANNELS] = {0};
+uint8_t hit_started[NUM_CHANNELS] = {0};
+unsigned int retrigger_ctd[NUM_CHANNELS] = {0};
 
 uint8_t hihat_pedal_threshold = 0xB0;
 uint8_t hihat_pedal_state = PEDAL_OPEN;
@@ -29,12 +29,12 @@ uint8_t p2_max[NUM_CHANNELS] = {0};
 uint8_t p2_i[NUM_CHANNELS] = {0};
 //uint8_t p2_win_size = 12;
 
-void save_settings(){
-	eeprom_write_block(settings, (uint8_t*)0, sizeof(deadbrain_config));
+void dsp_save_settings(){
+	eeprom_write_block(settings, (uint8_t*)0, sizeof(DeadBrainConfig));
 }
 
-void load_settings(){
-	eeprom_read_block(settings, (uint8_t*)0, sizeof(deadbrain_config));
+void dsp_load_settings(){
+	eeprom_read_block(settings, (uint8_t*)0, sizeof(DeadBrainConfig));
 }
 
 void dsp_send_hit(){
@@ -105,11 +105,13 @@ void dsp_send_pedal_status(){
 		midiMsg[6] = 0x07;
 		midiMsg[7] = 15; //velocity
 		msize = 8;
-		retrigger_ctd[PEDAL_CH] = settings[PEDAL_CH].retrigger * 10;
+		//TODO:uncomment later
+//		retrigger_ctd[PEDAL_CH] = settings[PEDAL_CH].retrigger * 10;
 	}
 	else{
 		midiMsg[3] = 0x7F; //pedal open cc msg
-		retrigger_ctd[PEDAL_CH] = settings[PEDAL_CH].retrigger * 20;
+		//TODO:uncomment later
+//		retrigger_ctd[PEDAL_CH] = settings[PEDAL_CH].retrigger * 20;
 	}
 
 //	sendEmptyFrame = 0;

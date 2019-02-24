@@ -1,4 +1,5 @@
 #include <usbdrv/usbdrv.h>
+#include <string.h>
 #include "midi.h"
 
 #define EMPTY_PACKET_CIN		0x00
@@ -27,7 +28,7 @@ typedef struct{
 } midi_packet;
 
 midi_packet usb_packet_buffer;
-midi_packet midi_rot_q[MIDI_QUEUE_SIZE] = {0};
+midi_packet midi_rot_q[MIDI_QUEUE_SIZE] = {{0}};
 midi_packet* q_head = midi_rot_q;
 midi_packet* q_tail = midi_rot_q;
 
@@ -76,7 +77,7 @@ uint8_t midi_qpush_raw_packet(uint8_t cin, uint8_t b0, uint8_t b1, uint8_t b2, u
 	if(midi_q_is_end(q_head)){
 		q_head = midi_rot_q;
 	}else{
-		q_head++;
+		++q_head;
 	}
 
 	return 1;
@@ -178,8 +179,50 @@ uint8_t midi_qpush_sysex_end_packet(uint8_t* dat, uint8_t len){
 					0x00,
 					0x00
 				);
+		case 0:
+			return midi_qpush_raw_packet(
+					SYSEX_CIN_END_AFTER_1,
+					SYSEX_FOOTER,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00,
+					0x00
+				);
 	}
 	return 0;
+}
+
+uint8_t midi_qpush_sysex_dump(uint8_t* dat, uint8_t len){
+	uint8_t cursor = 0;
+	midi_qpush_sysex_start_packet(
+			dat[cursor],
+			dat[cursor+1],
+			dat[cursor+2],
+			dat[cursor+3],
+			dat[cursor+4]
+		);
+	cursor += 5;
+
+	while(len - cursor > 5){
+		midi_qpush_sysex_cont_packet(
+				dat[cursor],
+				dat[cursor+1],
+				dat[cursor+2],
+				dat[cursor+3],
+				dat[cursor+4],
+				dat[cursor+5]
+			);
+		cursor += 6;
+	}
+
+	midi_qpush_sysex_end_packet(
+			&dat[cursor],
+			len - cursor
+		);
+	//add error check
+	return 1;
 }
 
 uint8_t midi_qpop_packet(){

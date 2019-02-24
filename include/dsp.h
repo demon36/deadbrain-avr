@@ -8,10 +8,10 @@
 #include "sys_ex_defs.h"
 
 extern uint8_t debug_ch;
-extern deadbrain_config settings;
+extern DeadBrainConfig settings;
 
-void save_settings();
-void load_settings();
+void dsp_save_settings();
+void dsp_load_settings();
 void dsp_send_hit();
 void dsp_process_sample_2();
 void dsp_send_pedal_status();

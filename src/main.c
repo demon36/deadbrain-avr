@@ -1,13 +1,3 @@
-
-/* Name: main.c
- * Project: V-USB MIDI device on Low-Speed USB
- * Author: Martin Homuth-Rosemann
- * Creation Date: 2008-03-11
- * Copyright: (c) 2008 by Martin Homuth-Rosemann.
- * License: GPL.
- *
- */
-
 #include <string.h>
 #include <avr/io.h>
 #include <avr/pgmspace.h>
@@ -15,70 +5,12 @@
 #include <util/delay.h>
 #include <avr/boot.h>
 
-#include <usbdrv/usbdrv.h>
-#include <usbdrv/oddebug.h>
-#include "descriptors.h"
 #include "uart.h"
 #include "timer.h"
 #include "adc.h"
 #include "dsp.h"
 #include "midi.h"
 #include "usb.h"
-
-/*---------------------------------------------------------------------------*/
-/* usbFunctionRead                                                           */
-/*---------------------------------------------------------------------------*/
-
-uchar usbFunctionRead(uchar * data, uchar len)
-{
-	// DEBUG LED
-	//PORTB = 0x20;
-	return 0;
-}
-
-/*---------------------------------------------------------------------------*/
-/* usbFunctionWrite                                                          */
-/*---------------------------------------------------------------------------*/
-
-uchar usbFunctionWrite(uchar * data, uchar len)
-{
-	// DEBUG LED
-	return 1;
-}
-
-/*---------------------------------------------------------------------------*/
-/* hardwareInit                                                              */
-/*---------------------------------------------------------------------------*/
-
-static void hardwareInit(void)
-{
-	uchar i, j;
-
-	/* activate pull-ups except on USB lines */
-	USB_CFG_IOPORT =
-	    (uchar) ~ ((1 << USB_CFG_DMINUS_BIT) |
-		       (1 << USB_CFG_DPLUS_BIT));
-	/* all pins input except USB (-> USB reset) */
-#ifdef USB_CFG_PULLUP_IOPORT	/* use usbDeviceConnect()/usbDeviceDisconnect() if available */
-	USBDDR = 0;		/* we do RESET by deactivating pullup */
-	usbDeviceDisconnect();
-#else
-	USBDDR = (1 << USB_CFG_DMINUS_BIT) | (1 << USB_CFG_DPLUS_BIT);
-#endif
-
-	j = 0;
-	while (--j) {		/* USB Reset by device only required on Watchdog Reset */
-		i = 0;
-		while (--i);	/* delay >10ms for USB reset */
-	}
-#ifdef USB_CFG_PULLUP_IOPORT
-	usbDeviceConnect();
-#else
-	USBDDR = 0;		/*  remove USB reset condition */
-#endif
-
-	DDRB = 0b00011111;
-}
 
 volatile uint8_t should_poll = 1;
 
@@ -98,27 +30,21 @@ int main(void)
 	//odDebugInit();
 
 	usbInit();
-	sendEmptyFrame = 0;
+//	sendEmptyFrame = 0;
 	uart_init();
 	timer_init();
 	timer_register_cb(timer_cb);
 	init_adc();
-	load_settings();
-	uart_send_str("start");
+	dsp_load_settings();
 	sei();
-	//load_settings();
-	//_delay_ms(5);
-	//show_settings();
-	while (1) {		/* main event loop */
+	while (1) {
 		wdt_reset();
 
 		if(should_poll){
 			usbPoll();
-//			midi_qpush_note_msg(4, 40);
-//			midi_release_qpacket();
-//			usb_send_dummy();
 			should_poll = 0;
 		}
+		midi_qpop_packet();
 
 		debug_ch = 0xFF;
 		//send_byte(0xff);
@@ -131,7 +57,6 @@ int main(void)
 
 			if(debug_ch == current_channel){ //watch signal ?
 				uart_send_byte(current_sample);
-//				midi_qpush_sysex_single_packet(current_sample, 0, 0, 0);
 			}
 
 			if(debug_ch == 0x10){
@@ -166,7 +91,6 @@ int main(void)
 //		}
 
 		//PORTB &= ~0x20;
-		midi_qpop_packet();
 	}
 	return 0;
 }

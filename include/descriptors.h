@@ -8,6 +8,8 @@
 #ifndef DESCRIPTORS_H_
 #define DESCRIPTORS_H_
 
+#include <usbdrv/usbdrv.h>
+
 #define INTERRUPT_POLL_INERVAL 1
 // This descriptor is based on http://www.usb.org/developers/devclass_docs/midi10.pdf
 //
