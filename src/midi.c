@@ -41,15 +41,19 @@ uint8_t midi_q_is_end(midi_packet* ptr){
 	}
 }
 
-uint8_t midi_qpush_note_msg(uint8_t channel, uint8_t velocity){
+uint8_t midi_qpush_note_msg(uint8_t note, uint8_t velocity){
 	if(q_head->cin != EMPTY_PACKET_CIN){
 		return 0;
 	}
 
 	q_head->cin = DATA_CIN;
 	q_head->b0 = NOTE_ON_HEADER;
-	q_head->b1 = channel;
+	q_head->b1 = note;
 	q_head->b2 = velocity;
+	q_head->cin2 = 0x00;
+	q_head->b3 = 0x00;
+	q_head->b4 = 0x00;
+	q_head->b5 = 0x00;
 
 	if(midi_q_is_end(q_head)){
 		q_head = midi_rot_q;

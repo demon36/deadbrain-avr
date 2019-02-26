@@ -1,6 +1,8 @@
 #ifndef USB_H_
 #define USB_H_
 
+#include <usbdrv/usbdrv.h>
+
 uint8_t usb_send_dummy();
 uchar usbFunctionRead(uchar * data, uchar len);
 uchar usbFunctionWrite(uchar * data, uchar len);

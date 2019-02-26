@@ -1,4 +1,9 @@
+#include <avr/eeprom.h>
+#include "adc.h"
+#include "uart.h"
+#include "midi.h"
 #include "dsp.h"
+
 
 #define true 1
 #define false 0
@@ -9,7 +14,7 @@
 
 //extern uchar sendEmptyFrame;
 
-uint8_t debug_ch = 0x10;
+uint8_t debug_ch = NUM_CHANNELS;
 DeadBrainConfig settings = {{0}};
 
 uint8_t last_sample[NUM_CHANNELS] = {0};
@@ -18,12 +23,6 @@ unsigned int retrigger_ctd[NUM_CHANNELS] = {0};
 
 uint8_t hihat_pedal_threshold = 0xB0;
 uint8_t hihat_pedal_state = PEDAL_OPEN;
-uint8_t midiMsg[8];
-
-// delayed message
-uint8_t delayed_msg_flag = false;
-uint8_t delayed_msg_note = 0x00;
-uint8_t delayed_msg_velocity = 0x00;
 
 uint8_t p2_max[NUM_CHANNELS] = {0};
 uint8_t p2_i[NUM_CHANNELS] = {0};
@@ -37,21 +36,6 @@ void dsp_load_settings(){
 	eeprom_read_block(settings, (uint8_t*)0, sizeof(DeadBrainConfig));
 }
 
-void dsp_send_hit(){
-	if (usbInterruptIsReady()){
-		midiMsg[0] = 0x09;
-		midiMsg[1] = 0x90;
-		midiMsg[2] = settings[current_channel].note;
-		midiMsg[3] = last_sample[current_channel] >> 1; //velocity
-//		sendEmptyFrame = 0;
-		usbSetInterrupt(midiMsg, 4);
-	}else{
-		delayed_msg_flag = true;
-		delayed_msg_note = settings[current_channel].note;
-		delayed_msg_velocity = last_sample[current_channel] >> 1; //velocity
-//		send_byte(0x99);
-	}
-}
 
 void dsp_process_sample_2(){
 	if (settings[current_channel].enabled){
@@ -72,27 +56,18 @@ void dsp_process_sample_2(){
 					retrigger_ctd[current_channel] = settings[current_channel].retrigger * 10;
 					p2_i[current_channel] = 0;
 					hit_started[current_channel] = false;
-					dsp_send_hit();
+					midi_qpush_note_msg(settings[current_channel].note, last_sample[current_channel] >> 1);
 				}
 			}
 		}else{
 			retrigger_ctd[current_channel]--;
 		}
 	}
-	if (delayed_msg_flag){
-		if (usbInterruptIsReady()){
-			midiMsg[0] = 0x09;
-			midiMsg[1] = 0x90;
-			midiMsg[2] = delayed_msg_note;
-			midiMsg[3] = delayed_msg_velocity;
-//			sendEmptyFrame = 0;
-			usbSetInterrupt(midiMsg, 4);
-			delayed_msg_flag = false;
-		}
-	}
 }
 
 void dsp_send_pedal_status(){
+/*
+	//TODO:uncomment later
 	uint8_t msize = 4;
 	if (usbInterruptIsReady()){
 		midiMsg[0] = 0x09;
@@ -105,18 +80,18 @@ void dsp_send_pedal_status(){
 		midiMsg[6] = 0x07;
 		midiMsg[7] = 15; //velocity
 		msize = 8;
-		//TODO:uncomment later
-//		retrigger_ctd[PEDAL_CH] = settings[PEDAL_CH].retrigger * 10;
+
+		retrigger_ctd[PEDAL_CH] = settings[PEDAL_CH].retrigger * 10;
 	}
 	else{
 		midiMsg[3] = 0x7F; //pedal open cc msg
-		//TODO:uncomment later
-//		retrigger_ctd[PEDAL_CH] = settings[PEDAL_CH].retrigger * 20;
+		retrigger_ctd[PEDAL_CH] = settings[PEDAL_CH].retrigger * 20;
 	}
 
-//	sendEmptyFrame = 0;
+	sendEmptyFrame = 0;
 	usbSetInterrupt(midiMsg, msize);
 	}
+*/
 }
 
 void dsp_process_hihat_pedal_sample(){

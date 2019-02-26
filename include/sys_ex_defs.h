@@ -16,7 +16,7 @@
 #define SYSEX_REPLY_FAIL		0x0B
 #define SYSEX_DEBUG_MSG			0x0D
 
-#define NUM_CHANNELS			8
+#define NUM_CHANNELS			16
 
 typedef struct{
 	uint8_t enabled;

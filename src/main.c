@@ -46,20 +46,15 @@ int main(void)
 		}
 		midi_qpop_packet();
 
-		debug_ch = 0xFF;
-		//send_byte(0xff);
-//		if(counter_bit == 0)
-//			TCCR1B = 0x05 ;
-
 		current_channel = 0;
 		while(current_channel < 8){
 			get_sample();
 
-			if(debug_ch == current_channel){ //watch signal ?
+			if(debug_ch == current_channel){
 				uart_send_byte(current_sample);
 			}
 
-			if(debug_ch == 0x10){
+			if(debug_ch == NUM_CHANNELS){//debugging off
 				dsp_process_sample_2();
 			}
 			current_channel++;
