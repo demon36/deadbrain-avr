@@ -4,8 +4,8 @@
 #include <avr/wdt.h>
 #include <util/delay.h>
 #include <avr/boot.h>
+#include <avr/interrupt.h>
 
-#include "uart.h"
 #include "timer.h"
 #include "adc.h"
 #include "dsp.h"
@@ -20,45 +20,40 @@ void timer_cb(){
 
 int main(void)
 {
-	//debug led 04
-//	PORTB ^= 0x10;
-//	_delay_ms(1000);
-//	PORTB &= ~0x10;
-
 	wdt_enable(WDTO_1S);
 	hardwareInit();
-	//odDebugInit();
-
 	usbInit();
-//	sendEmptyFrame = 0;
-	uart_init();
-	timer_init();
+	adc_init();
 	timer_register_cb(timer_cb);
-	init_adc();
 	dsp_load_settings();
+	timer_init();
 	sei();
-	while (1) {
+	while(1){
 		wdt_reset();
 
 		if(should_poll){
 			usbPoll();
+			midi_qpush_sysex_single_packet(adc_q_get_num_avail_samples(), current_channel, 0, 0);
 			should_poll = 0;
 		}
 		midi_qpop_packet();
 
-		current_channel = 0;
-		while(current_channel < 8){
+		while(adc_q_get_num_avail_samples() > 0){
 			get_sample();
-
-			if(debug_ch == current_channel){
-				uart_send_byte(current_sample);
-			}
 
 			if(debug_ch == NUM_CHANNELS){//debugging off
 				dsp_process_sample_2();
+			}else if(debug_ch == current_channel){
+//				uart_send_byte(current_sample);
 			}
+
 			current_channel++;
+			if(current_channel == 8){
+				current_channel = 0;
+			}
 		}
+
+		continue;
 
 //		//hihat
 //		get_sample();
@@ -70,7 +65,7 @@ int main(void)
 		//hihat pedal
 		get_pedal_value();
 		if(debug_ch == current_channel){
-			uart_send_byte(current_sample);
+//			uart_send_byte(current_sample);
 		}
 		dsp_process_hihat_pedal_sample();
 		current_channel++;

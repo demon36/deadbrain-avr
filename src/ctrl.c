@@ -1,8 +1,11 @@
 #include <string.h>
 #include <usbdrv/usbdrv.h>
+#include <util/delay.h>
 #include "dsp.h"
 #include "midi.h"
 #include "sys_ex_defs.h"
+
+//static void(*jumpToBootLoader)(void) __attribute__((__noreturn__)) = (void*)0x3800;
 
 void ctr_reply_settings(){
 
